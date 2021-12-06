@@ -16,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/Reflekshn/tinyapp/issues"
   },
-  "homepage": "https://github.com/Reflekshn/tinyapp#readme"
+  "homepage": "https://github.com/Reflekshn/tinyapp#readme",
+  "dependencies": {
+    "express": "^4.17.1"
+  }
 }
