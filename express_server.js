@@ -9,6 +9,11 @@ const urlDatabase = {
   '9sm5xK': 'http://www.google.com'
 };
 
+
+/////////////////////////////////////////
+// Setup procedures
+/////////////////////////////////////////
+
 // Set the view engine to EJS
 app.set('view engine', 'ejs');
 
@@ -20,7 +25,9 @@ app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
 
+/////////////////////////////////////////
 // Define GET route handlers
+/////////////////////////////////////////
 app.get('/', (req, res) => {
   res.redirect('/urls');
 });
@@ -39,16 +46,22 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.get("/urls/:shortURL", (req, res) => {
-  console.log('req.params: ', req.params);
   const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
   res.render("urls_show", templateVars);
 });
 
+/////////////////////////////////////////
 // Define POST route handlers
+/////////////////////////////////////////
 app.post('/urls', (req, res) => {
-  console.log(req.body);
-  res.send('Ok');
+  req.body.shortURL = generateRandomString();
+  urlDatabase[req.body.shortURL] = req.body.longURL;
+  res.redirect(`/urls/:${req.body.shortURL}`);
 });
+
+/////////////////////////////////////////
+// Helper Functions
+/////////////////////////////////////////
 
 // Generate a 6 character long random alpha-numeric string
 const generateRandomString = () => Math.random().toString(36).slice(2, 8);
