@@ -2,23 +2,33 @@ const express = require('express');
 const app = express();
 const PORT = 8080; // default port 8080
 
+// Object to store our database of shorthand url's
 const urlDatabase = {
   'b2xVn2': 'http://www.lighthouselabs.ca',
   '9sm5xK': 'http://www.google.com'
 };
 
+// Set the view engine to EJS
 app.set('view engine', 'ejs');
 
-app.get('/', (req, res) => {
-  res.send('Hello!');
-});
-
+// Setup the server to listen on the desired PORT
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
 
+
+// Set various route handlers
+app.get('/', (req, res) => {
+  res.send('Hello!');
+});
+
 app.get('/urls.json', (req, res) => {
   res.json(urlDatabase);
+});
+
+app.get('/urls', (req, res) => {
+  const templateVars = {urls: urlDatabase};
+  res.render('urls_index', templateVars);
 });
 
 app.get('/hello', (req, res) => {
