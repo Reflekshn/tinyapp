@@ -9,13 +9,19 @@
       <div class="navbar-nav">
         <a class="nav-item nav-link" href="/urls">My URLs</a>
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
-        <form class="form-inline" action="/login" method="POST">
-          <label for="username">Enter your username:</label>
-          <input class="form-control" type="text" name="username" placeholder="Username"
-            style="width: 300px; margin: 1em">
-          <button type="submit" class="btn btn-primary">Sign In</button>
-        </form>
-        <p><%= username %></p>
+        <% if (username) { %>
+          <form class="form-inline" action="/logout" method="POST">
+            <p>Logged In As: <%= username %></p>
+            <button type="submit" class="btn btn-outline-primary">Logout</button>
+          </form>
+        <% } else { %>
+          <form class="form-inline" action="/login" method="POST">
+            <label for="username">Enter your username:</label>
+            <input class="form-control" type="text" name="username" placeholder="Username"
+              style="width: 300px; margin: 1em">
+            <button type="submit" class="btn btn-primary">Sign In</button>
+          </form>
+        <% } %>
       </div>
     </div>
   </nav>
