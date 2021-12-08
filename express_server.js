@@ -58,10 +58,27 @@ app.get("/u/:shortURL", (req, res) => {
 /////////////////////////////////////////
 // Define POST route handlers
 /////////////////////////////////////////
-app.post('/urls', (req, res) => {
-  req.body.shortURL = generateRandomString();
-  urlDatabase[req.body.shortURL] = req.body.longURL;
-  res.redirect(`/urls/${req.body.shortURL}`);
+app.post('/urls/new', (req, res) => {
+  if (!req.body.longURL) {
+    res.status(400).send('Invalid URL entered');
+  } else {
+    const shortURL = generateRandomString();
+    urlDatabase[shortURL] = req.body.longURL;
+    res.redirect(`/urls/${shortURL}`);
+  }
+});
+
+app.post('/urls/:shortURL', (req, res) => {
+  if (!req.body.longURL) {
+    res.status(400).send('Invalid URL entered');
+  } else {
+    urlDatabase[req.params.shortURL] = req.body.longURL;
+    res.redirect(`/urls/${req.params.shortURL}`);
+  }
+});
+
+app.post('/urls/:shortURL/edit', (req, res) => {
+  res.redirect(`/urls/${req.params.shortURL}`);
 });
 
 app.post('/urls/:shortURL/delete', (req, res) => {
