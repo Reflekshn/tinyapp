@@ -19,7 +19,7 @@ const urlDatabase = {
 app.set('view engine', 'ejs');
 
 // Initialize the body parser and cookie parser packages
-app.use(bodyParser.urlencoded({extended: true}));
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 // Setup the server to listen on the desired PORT
@@ -32,6 +32,13 @@ app.listen(PORT, () => {
 /////////////////////////////////////////
 app.get('/', (req, res) => {
   res.redirect('/urls');
+});
+
+app.get('/register', (req, res) => {
+  const templateVars = {
+    username: req.cookies['username']
+  };
+  res.render('register', templateVars);
 });
 
 app.get('/urls.json', (req, res) => {
