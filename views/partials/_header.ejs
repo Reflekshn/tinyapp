@@ -9,17 +9,17 @@
     </div>
     <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
       <div class="navbar-nav">
-        <% if (!user.email) { %>
+        <% if (user) { %>
+          <p class="nav-item nav-link active">Logged in as: <%= user.email %></p>
+          <form method="POST" action="/logout">
+            <button type="submit" class="btn btn-outline-primary">Logout</button>
+          </form>
+        <% } else { %>
           <form method="GET" action="/login">
             <button type="submit" class="btn btn-outline-primary">Login</button>
           </form>
           <form method="GET" action="/register">
             <button type="submit" class="btn btn-outline-primary">Register New User</button>
-          </form>
-        <% } else { %>
-          <p class="nav-item nav-link active">Logged in as: <%= user.email %></p>
-          <form method="POST" action="/logout">
-            <button type="submit" class="btn btn-outline-primary">Logout</button>
           </form>
         <% } %>
       </div>
