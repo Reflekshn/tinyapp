@@ -21,7 +21,18 @@ const urlDatabase = {
 
 // Database object of registered users
 const users = {
+  "user1": {
+    id: "user1",
+    email: "user1@example.com",
+    password: "abcd"
+  },
+  "user2": {
+    id: "user2",
+    email: "user2@example.com",
+    password: "efgh"
+  }
 };
+
 
 
 /////////////////////////////////////////
@@ -51,30 +62,29 @@ app.get('/', (req, res) => {
   res.redirect('/urls');
 });
 
-app.get('/urls.json', (req, res) => {
-  res.json(urlDatabase);
-});
-
 app.get('/urls', (req, res) => {
+  const user = 'user1';
   const templateVars = {
     urls: urlDatabase,
-    username: req.cookies['username']
+    user: users[user]
   };
   res.render('urls_index', templateVars);
 });
 
 app.get("/urls/new", (req, res) => {
+  const user = 'user1';
   const templateVars = {
-    username: req.cookies['username']
+    user: users[user]
   };
   res.render("urls_new", templateVars);
 });
 
 app.get("/urls/:shortURL", (req, res) => {
+  const user = 'user1';
   const templateVars = {
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL],
-    username: req.cookies['username']
+    user: users[user]
   };
   res.render("urls_show", templateVars);
 });
@@ -85,8 +95,9 @@ app.get("/u/:shortURL", (req, res) => {
 });
 
 app.get('/register', (req, res) => {
+  const user = 'user1';
   const templateVars = {
-    username: req.cookies['username']
+    user: users[user]
   };
   res.render('register', templateVars);
 });
@@ -119,12 +130,25 @@ app.post('/urls/:shortURL/delete', (req, res) => {
 });
 
 app.post('/register', (req, res) => {
+  if (!req.body.email || !req.body.password) {
+    return res.status(400).send("Invalid email address or password");
+  }
+
+  for (let id in users) {
+    const user = users[id];
+    if (user.email === req.body.email) {
+      console.log(users);
+      return res.status(400).send("Username/Email already taken");
+    }
+  }
+
   const generatedID = generateRandomString(10);
   users[generatedID] = {
     id: generatedID,
     email: req.body.username,
     password: req.body.password
   };
+  console.log(users);
   res.cookie('user_id', generatedID);
   res.redirect('/urls');
 });
