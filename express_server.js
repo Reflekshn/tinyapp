@@ -21,6 +21,11 @@ const urlDatabase = {
 
 // Database object of registered users containing one default user to start with
 const users = {
+  'default_user': {
+    id: 'default_user',
+    email: 'default_user@example.com',
+    password: 'abcd'
+  }
 };
 
 
@@ -55,6 +60,9 @@ app.get('/urls', (req, res) => {
   if (!req.cookies['user_id']) {
     res.redirect('/login');
   }
+
+  console.log('urlDataBase:', urlDatabase);
+
   const templateVars = {
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL]
@@ -87,7 +95,7 @@ app.get("/u/:shortURL", (req, res) => {
 });
 
 app.get('/register', (req, res) => {
-  const user = 'default_user';
+  const user = null;
   const templateVars = {
     user: users[user]
   };
@@ -95,10 +103,15 @@ app.get('/register', (req, res) => {
 });
 
 app.get('/login', (req, res) => {
-  const user = 'default_user';
-  const templateVars = {
-    user: users[user]
-  };
+  const templateVars = {};
+
+  if (!req.cookies['user_id']) {
+    templateVars['user'] = null;
+  } else {
+    templateVars['user'] = users[req.cookies['user_id']];
+  }
+
+  console.log('users:', users);
   res.render('login', templateVars);
 });
 
@@ -150,20 +163,19 @@ app.post('/register', (req, res) => {
   const generatedID = generateRandomString(10);
   users[generatedID] = {
     id: generatedID,
-    email: req.body.username,
+    email: req.body.email,
     password: req.body.password
   };
-  res.redirect('/urls');
+  res.redirect('/login');
 });
 
 app.post('/login', (req, res) => {
   res.cookie('user_id', req.body.email);
-  // res.cookie('username', req.body.username);
   res.redirect('/urls');
 });
 
 app.post('/logout', (req, res) => {
-  // res.clearCookie('username');
+  res.clearCookie('user_id');
   res.redirect('/login');
 });
 
