@@ -102,6 +102,14 @@ app.get('/register', (req, res) => {
   res.render('register', templateVars);
 });
 
+app.get('/login', (req, res) => {
+  const user = 'user1';
+  const templateVars = {
+    user: users[user]
+  };
+  res.render('login', templateVars);
+});
+
 /////////////////////////////////////////
 // POST route handlers
 /////////////////////////////////////////
@@ -154,12 +162,12 @@ app.post('/register', (req, res) => {
 });
 
 app.post('/login', (req, res) => {
-  res.cookie('username', req.body.username);
+  // res.cookie('username', req.body.username);
   res.redirect('urls');
 });
 
 app.post('/logout', (req, res) => {
-  res.clearCookie('username');
+  // res.clearCookie('username');
   res.redirect('urls');
 });
 
