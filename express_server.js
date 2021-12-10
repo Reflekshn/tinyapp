@@ -19,18 +19,8 @@ const urlDatabase = {
   '9sm5xK': 'http://www.google.com'
 };
 
-// Database object of registered users
+// Database object of registered users containing one default user to start with
 const users = {
-  "user1": {
-    id: "user1",
-    email: "user1@example.com",
-    password: "abcd"
-  },
-  "user2": {
-    id: "user2",
-    email: "user2@example.com",
-    password: "efgh"
-  }
 };
 
 
@@ -62,16 +52,19 @@ app.get('/', (req, res) => {
 });
 
 app.get('/urls', (req, res) => {
-  const user = 'user1';
+  if (!req.cookies['user_id']) {
+    res.redirect('/login');
+  }
   const templateVars = {
-    urls: urlDatabase,
-    user: users[user]
+    shortURL: req.params.shortURL,
+    longURL: urlDatabase[req.params.shortURL]
   };
+
   res.render('urls_index', templateVars);
 });
 
 app.get("/urls/new", (req, res) => {
-  const user = 'user1';
+  const user = 'default_user';
   const templateVars = {
     user: users[user]
   };
@@ -79,7 +72,7 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.get("/urls/:shortURL", (req, res) => {
-  const user = 'user1';
+  const user = 'default_user';
   const templateVars = {
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL],
@@ -94,7 +87,7 @@ app.get("/u/:shortURL", (req, res) => {
 });
 
 app.get('/register', (req, res) => {
-  const user = 'user1';
+  const user = 'default_user';
   const templateVars = {
     user: users[user]
   };
@@ -102,7 +95,7 @@ app.get('/register', (req, res) => {
 });
 
 app.get('/login', (req, res) => {
-  const user = 'user1';
+  const user = 'default_user';
   const templateVars = {
     user: users[user]
   };
@@ -110,7 +103,8 @@ app.get('/login', (req, res) => {
 });
 
 app.get('/logout', (req, res) => {
-  res.render('urls_index');
+  res.clearCookie('user_id');
+  res.render('/login');
 });
 
 /////////////////////////////////////////
@@ -159,12 +153,11 @@ app.post('/register', (req, res) => {
     email: req.body.username,
     password: req.body.password
   };
-  console.log(users);
-  res.cookie('user_id', generatedID);
   res.redirect('/urls');
 });
 
 app.post('/login', (req, res) => {
+  res.cookie('user_id', req.body.email);
   // res.cookie('username', req.body.username);
   res.redirect('/urls');
 });
