@@ -29,7 +29,6 @@ const users = {
 };
 
 
-
 /////////////////////////////////////////
 // Setup procedures
 /////////////////////////////////////////
@@ -53,40 +52,44 @@ app.listen(PORT, () => {
 // GET route handlers
 /////////////////////////////////////////
 app.get('/', (req, res) => {
-  res.redirect('/urls');
+  res.redirect('/login');
 });
 
 app.get('/urls', (req, res) => {
   if (!req.cookies['user_id']) {
     res.redirect('/login');
+  } else {
+    console.log('urlDataBase:', urlDatabase);
+    const templateVars = {
+      urls: urlDatabase,
+      'user': users[req.cookies['user_id']]
+    };
+    res.render('urls_index', templateVars);
   }
-
-  console.log('urlDataBase:', urlDatabase);
-
-  const templateVars = {
-    shortURL: req.params.shortURL,
-    longURL: urlDatabase[req.params.shortURL]
-  };
-
-  res.render('urls_index', templateVars);
 });
 
 app.get("/urls/new", (req, res) => {
-  const user = 'default_user';
-  const templateVars = {
-    user: users[user]
-  };
-  res.render("urls_new", templateVars);
+  if (!req.cookies['user_id']) {
+    res.redirect('/login');
+  } else {
+    const templateVars = {
+      'user': users[req.cookies['user_id']]
+    };
+    res.render("urls_new", templateVars);
+  }
 });
 
 app.get("/urls/:shortURL", (req, res) => {
-  const user = 'default_user';
-  const templateVars = {
-    shortURL: req.params.shortURL,
-    longURL: urlDatabase[req.params.shortURL],
-    user: users[user]
-  };
-  res.render("urls_show", templateVars);
+  if (!req.cookies['user_id']) {
+    res.redirect('/login');
+  } else {
+    const templateVars = {
+      shortURL: req.params.shortURL,
+      longURL: urlDatabase[req.params.shortURL],
+      'user': users[req.cookies['user_id']]
+    };
+    res.render("urls_show", templateVars);
+  }
 });
 
 app.get("/u/:shortURL", (req, res) => {
@@ -95,29 +98,28 @@ app.get("/u/:shortURL", (req, res) => {
 });
 
 app.get('/register', (req, res) => {
-  const user = null;
-  const templateVars = {
-    user: users[user]
-  };
-  res.render('register', templateVars);
-});
-
-app.get('/login', (req, res) => {
   const templateVars = {};
-
   if (!req.cookies['user_id']) {
     templateVars['user'] = null;
   } else {
     templateVars['user'] = users[req.cookies['user_id']];
   }
-
-  console.log('users:', users);
-  res.render('login', templateVars);
+  res.render('register', templateVars);
 });
 
-app.get('/logout', (req, res) => {
-  res.clearCookie('user_id');
-  res.render('/login');
+app.get('/login', (req, res) => {
+  const templateVars = {
+    'user': null
+  };
+
+  if (req.cookies['user_id']) {
+    templateVars.shortURL = req.params.shortURL;
+    templateVars.longURL = req.params.longURL;
+    templateVars['user'] = users[req.cookies['user_id']];
+    res.render('/urls', templateVars);
+  }
+
+  res.render('login', templateVars);
 });
 
 /////////////////////////////////////////
@@ -166,11 +168,13 @@ app.post('/register', (req, res) => {
     email: req.body.email,
     password: req.body.password
   };
+
   res.redirect('/login');
 });
 
 app.post('/login', (req, res) => {
-  res.cookie('user_id', req.body.email);
+  console.log(req.body);
+  res.cookie('user_id', 'default_user');
   res.redirect('/urls');
 });
 
