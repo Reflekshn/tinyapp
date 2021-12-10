@@ -13,6 +13,9 @@
           <form method="GET" action="/login">
             <button type="submit" class="btn btn-outline-primary">Login</button>
           </form>
+          <form method="GET" action="/register">
+            <button type="submit" class="btn btn-outline-primary">Register New User</button>
+          </form>
         <% } else { %>
           <p class="nav-item nav-link active">Logged in as: <%= user.email %></p>
           <form method="POST" action="/logout">
