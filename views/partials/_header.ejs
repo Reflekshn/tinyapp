@@ -15,7 +15,7 @@
           </form>
         <% } else { %>
           <p class="nav-item nav-link active">Logged in as: <%= user.email %></p>
-          <form method="GET" action="/logout">
+          <form method="POST" action="/logout">
             <button type="submit" class="btn btn-outline-primary">Logout</button>
           </form>
         <% } %>

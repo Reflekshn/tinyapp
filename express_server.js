@@ -45,7 +45,6 @@ app.set('view engine', 'ejs');
 
 // Initialize our packages
 app.use(express.json());
-app.use(express.urlencoded({extended: false}));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -110,6 +109,10 @@ app.get('/login', (req, res) => {
   res.render('login', templateVars);
 });
 
+app.get('/logout', (req, res) => {
+  res.render('urls_index');
+});
+
 /////////////////////////////////////////
 // POST route handlers
 /////////////////////////////////////////
@@ -163,12 +166,12 @@ app.post('/register', (req, res) => {
 
 app.post('/login', (req, res) => {
   // res.cookie('username', req.body.username);
-  res.redirect('urls');
+  res.redirect('/urls');
 });
 
 app.post('/logout', (req, res) => {
   // res.clearCookie('username');
-  res.redirect('urls');
+  res.redirect('/login');
 });
 
 /////////////////////////////////////////
