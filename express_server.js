@@ -1,13 +1,26 @@
+/////////////////////////////////////////
+// Global Constants
+/////////////////////////////////////////
 const express = require('express');
+const app = express();
+const path = require('path');
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
-const app = express();
 const PORT = 8080; // default port 8080
 
-// Object to store our database of shorthand url's
+
+/////////////////////////////////////////
+// Setup procedures
+/////////////////////////////////////////
+
+// Database object of shorthand URL's
 const urlDatabase = {
   'b2xVn2': 'http://www.lighthouselabs.ca',
   '9sm5xK': 'http://www.google.com'
+};
+
+// Database object of registered users
+const users = {
 };
 
 
@@ -16,9 +29,13 @@ const urlDatabase = {
 /////////////////////////////////////////
 
 // Set the view engine to EJS
+app.set('views', path.join(__dirname, "views"));
 app.set('view engine', 'ejs');
 
-// Initialize the body parser and cookie parser packages
+// Initialize our packages
+app.use(express.json());
+app.use(express.urlencoded({extended: false}));
+app.use(express.static(path.join(__dirname, 'public')));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 
@@ -28,17 +45,10 @@ app.listen(PORT, () => {
 });
 
 /////////////////////////////////////////
-// Define GET route handlers
+// GET route handlers
 /////////////////////////////////////////
 app.get('/', (req, res) => {
   res.redirect('/urls');
-});
-
-app.get('/register', (req, res) => {
-  const templateVars = {
-    username: req.cookies['username']
-  };
-  res.render('register', templateVars);
 });
 
 app.get('/urls.json', (req, res) => {
@@ -74,14 +84,21 @@ app.get("/u/:shortURL", (req, res) => {
   res.redirect(longURL);
 });
 
+app.get('/register', (req, res) => {
+  const templateVars = {
+    username: req.cookies['username']
+  };
+  res.render('register', templateVars);
+});
+
 /////////////////////////////////////////
-// Define POST route handlers
+// POST route handlers
 /////////////////////////////////////////
 app.post('/urls/new', (req, res) => {
   if (!req.body.longURL) {
     res.status(400).send('Invalid URL entered');
   } else {
-    const shortURL = generateRandomString();
+    const shortURL = generateRandomString(6);
     urlDatabase[shortURL] = req.body.longURL;
     res.redirect(`/urls/${shortURL}`);
   }
@@ -96,12 +113,19 @@ app.post('/urls/:shortURL', (req, res) => {
   }
 });
 
-app.post('/urls/:shortURL/edit', (req, res) => {
-  res.redirect(`/urls/${req.params.shortURL}`);
-});
-
 app.post('/urls/:shortURL/delete', (req, res) => {
   delete urlDatabase[req.params.shortURL];
+  res.redirect('/urls');
+});
+
+app.post('/register', (req, res) => {
+  const generatedID = generateRandomString(10);
+  users[generatedID] = {
+    id: generatedID,
+    email: req.body.username,
+    password: req.body.password
+  };
+  res.cookie('user_id', generatedID);
   res.redirect('/urls');
 });
 
@@ -120,4 +144,4 @@ app.post('/logout', (req, res) => {
 /////////////////////////////////////////
 
 // Generate a 6 character long random alpha-numeric string
-const generateRandomString = () => Math.random().toString(36).slice(2, 8);
+const generateRandomString = (length) => Math.random().toString(36).slice(2, length + 2);
