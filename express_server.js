@@ -51,10 +51,13 @@ app.listen(PORT, () => {
 /////////////////////////////////////////
 // GET route handlers
 /////////////////////////////////////////
+
+// Root - redirects to the login page
 app.get('/', (req, res) => {
   res.redirect('/login');
 });
 
+// Url index of all stored urls
 app.get('/urls', (req, res) => {
   if (!req.cookies['user_id']) {
     res.redirect('/login');
@@ -64,10 +67,11 @@ app.get('/urls', (req, res) => {
       urls: urlDatabase,
       'user': users[req.cookies['user_id']]
     };
-    res.render('urls_index', templateVars);
+    res.render('/urls_index', templateVars);
   }
 });
 
+// Adding a new URL
 app.get("/urls/new", (req, res) => {
   if (!req.cookies['user_id']) {
     res.redirect('/login');
@@ -75,10 +79,11 @@ app.get("/urls/new", (req, res) => {
     const templateVars = {
       'user': users[req.cookies['user_id']]
     };
-    res.render("urls_new", templateVars);
+    res.render("/urls_new", templateVars);
   }
 });
 
+// Viewing or modifying a specific URL
 app.get("/urls/:shortURL", (req, res) => {
   if (!req.cookies['user_id']) {
     res.redirect('/login');
@@ -88,15 +93,17 @@ app.get("/urls/:shortURL", (req, res) => {
       longURL: urlDatabase[req.params.shortURL],
       'user': users[req.cookies['user_id']]
     };
-    res.render("urls_show", templateVars);
+    res.render("/urls_show", templateVars);
   }
 });
 
+// Redirect of a ShortURL to the actual webpage linked to it
 app.get("/u/:shortURL", (req, res) => {
   const longURL = urlDatabase[req.params.shortURL];
   res.redirect(longURL);
 });
 
+// Register a new user
 app.get('/register', (req, res) => {
   const templateVars = {};
   if (!req.cookies['user_id']) {
@@ -104,9 +111,10 @@ app.get('/register', (req, res) => {
   } else {
     templateVars['user'] = users[req.cookies['user_id']];
   }
-  res.render('register', templateVars);
+  res.render('/register', templateVars);
 });
 
+// Login page
 app.get('/login', (req, res) => {
   const templateVars = {
     'user': null
@@ -117,14 +125,17 @@ app.get('/login', (req, res) => {
     templateVars.longURL = req.params.longURL;
     templateVars['user'] = users[req.cookies['user_id']];
     res.render('/urls', templateVars);
+  } else {
+    res.render('/login', templateVars);
   }
 
-  res.render('login', templateVars);
 });
 
 /////////////////////////////////////////
 // POST route handlers
 /////////////////////////////////////////
+
+// Adding a new short URL to the database
 app.post('/urls/new', (req, res) => {
   if (!req.body.longURL) {
     res.status(400).send('Invalid URL entered');
@@ -135,7 +146,8 @@ app.post('/urls/new', (req, res) => {
   }
 });
 
-app.post('/urls/:shortURL', (req, res) => {
+// Editing a short URL
+app.post('/urls/:shortURL/edit', (req, res) => {
   if (!req.body.longURL) {
     res.status(400).send('Invalid URL entered');
   } else {
@@ -144,11 +156,13 @@ app.post('/urls/:shortURL', (req, res) => {
   }
 });
 
+// Deleting a short URL from the database
 app.post('/urls/:shortURL/delete', (req, res) => {
   delete urlDatabase[req.params.shortURL];
   res.redirect('/urls');
 });
 
+// Registering a new user
 app.post('/register', (req, res) => {
   if (!req.body.email || !req.body.password) {
     return res.status(400).send("Invalid email address or password");
@@ -172,12 +186,14 @@ app.post('/register', (req, res) => {
   res.redirect('/login');
 });
 
+// Logging in a user
 app.post('/login', (req, res) => {
   console.log(req.body);
   res.cookie('user_id', 'default_user');
   res.redirect('/urls');
 });
 
+// Logging out a user
 app.post('/logout', (req, res) => {
   res.clearCookie('user_id');
   res.redirect('/login');
