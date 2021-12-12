@@ -128,7 +128,7 @@ app.get('/login', (req, res) => {
     templateVars['user'] = users[req.cookies['user_id']];
     res.render('urls_index', templateVars);
   } else {
-    res.render('login');
+    res.render('login', templateVars);
   }
 });
 
