@@ -66,15 +66,15 @@ app.get('/', (req, res) => {
 // Url index of all stored urls
 app.get('/urls', (req, res) => {
   if (!req.cookies['user_id']) {
-    res.redirect('/login');
-  } else {
-    console.log('urlDataBase:', urlDatabase);  // DEVELOPMENT ONLY. REMOVE FOR FINAL RELEASE.
-    const templateVars = {
-      urls: urlDatabase,
-      'user': users[req.cookies['user_id']]
-    };
-    res.render('urls_index', templateVars);
+    res.status(400).send('Please login or register a new user<br><a href="javascript:history.back()">Go Back</a>');
   }
+  console.log(urlDatabase);
+  console.log(users);
+  const templateVars = {
+    urls: urlsForUser(req.cookies['user_id']),
+    userID: users[req.cookies['user_id']]
+  };
+  res.render('urls_index', templateVars);
 });
 
 // Adding a new URL
@@ -83,7 +83,7 @@ app.get("/urls/new", (req, res) => {
     res.redirect('/login');
   } else {
     const templateVars = {
-      'user': users[req.cookies['user_id']]
+      userID: users[req.cookies['user_id']]
     };
     res.render('urls_new', templateVars);
   }
@@ -97,7 +97,7 @@ app.get("/urls/:shortURL", (req, res) => {
     const templateVars = {
       shortURL: req.params.shortURL,
       longURL: urlDatabase[req.params.shortURL].longURL,
-      'user': users[req.cookies['user_id']]
+      userID: users[req.cookies['user_id']]
     };
     res.render("urls_show", templateVars);
   }
@@ -106,8 +106,6 @@ app.get("/urls/:shortURL", (req, res) => {
 // Redirect of a ShortURL to the actual webpage linked to it
 app.get("/u/:shortURL", (req, res) => {
   const shortURL = lookupShortURL(urlDatabase, req.params.shortURL);
-  console.log('BACK IN THE SHORTURL REDIRECT FUNCTION');
-  console.log(shortURL);
 
   // Make sure a valid shortened URL was provided
   if (!shortURL) {
@@ -122,9 +120,9 @@ app.get('/register', (req, res) => {
 
   // Check to see if a cookie exists and assign the value to a variable to send to the EJS template
   if (!req.cookies['user_id']) {
-    templateVars['user'] = null;
+    templateVars['userID'] = null;
   } else {
-    templateVars['user'] = users[req.cookies['user_id']];
+    templateVars['userID'] = users[req.cookies['user_id']];
   }
   res.render('register', templateVars);
 });
@@ -133,14 +131,14 @@ app.get('/register', (req, res) => {
 app.get('/login', (req, res) => {
   const templateVars = {
     urls: urlDatabase,
-    'user': null
+    userID: null
   };
 
+  console.log(urlDatabase);
   console.log(users);
-
   // Check to see if a cookie exists and redirect to the correct page
   if (req.cookies['user_id']) {
-    templateVars['user'] = users[req.cookies['user_id']];
+    templateVars['userID'] = users[req.cookies['user_id']];
     res.render('urls_index', templateVars);
   } else {
     res.render('login', templateVars);
@@ -158,7 +156,8 @@ app.post('/urls/new', (req, res) => {
   } else {
     const shortURL = generateRandomString(6);
     urlDatabase[shortURL] = {
-      longURL: req.body.longURL
+      longURL: req.body.longURL,
+      userID: req.cookies['user_id']
     };
     res.redirect(`/urls`);
   }
@@ -166,17 +165,20 @@ app.post('/urls/new', (req, res) => {
 
 // Editing a short URL in the database
 app.post('/urls/:shortURL/edit', (req, res) => {
-  if (!req.body.longURL) {
-    res.status(400).send('Invalid URL entered<br><a href="javascript:history.back()">Go Back</a>');
-  } else {
+  if (urlDatabase[req.params.shortURL].userID === req.cookies['user_id']) {
+    if (!req.body.longURL) {
+      res.status(400).send('Invalid URL entered<br><a href="javascript:history.back()">Go Back</a>');
+    }
     urlDatabase[req.params.shortURL].longURL = req.body.longURL;
-    res.redirect(`/urls/${req.params.shortURL}`);
   }
+  res.redirect(`/urls/${req.params.shortURL}`);
 });
 
 // Deleting a short URL from the database
 app.post('/urls/:shortURL/delete', (req, res) => {
-  delete urlDatabase[req.params.shortURL];
+  if (urlDatabase[req.params.shortURL].userID === req.cookies['user_id']) {
+    delete urlDatabase[req.params.shortURL];
+  }
   res.redirect('/urls');
 });
 
@@ -188,7 +190,7 @@ app.post('/register', (req, res) => {
   }
 
   // Check to see if user exists
-  const user = lookupUserByEmail(users, req.body.email);
+  const user = lookupUserByEmail(req.body.email);
   if (user) {
     return res.status(400).send('Username/Email already taken<br><a href="javascript:history.back()">Go Back</a>');
   }
@@ -200,13 +202,13 @@ app.post('/register', (req, res) => {
     password: req.body.password
   };
 
-  console.log(urlDatabase);  // DEVELOPMENT ONLY. REMOVE FOR FINAL RELEASE.
+  console.log(urlDatabase);
   res.redirect('/login');
 });
 
 // Logging in a user
 app.post('/login', (req, res) => {
-  const user = lookupUserByEmail(users, req.body.email);
+  const user = lookupUserByEmail(req.body.email);
   const password = req.body.password;
 
   // Check to see if you user exists, if so, check if the passwords match
@@ -223,8 +225,8 @@ app.post('/login', (req, res) => {
 
 // Logging out a user
 app.post('/logout', (req, res) => {
-  console.log(urlDatabase);  // DEVELOPMENT ONLY. REMOVE FOR FINAL RELEASE.
-  console.log(users);  // DEVELOPMENT ONLY. REMOVE FOR FINAL RELEASE.
+  console.log(urlDatabase);
+  console.log(users);
   res.clearCookie('user_id');
   res.redirect('/login');
 });
@@ -234,7 +236,7 @@ app.post('/logout', (req, res) => {
 /////////////////////////////////////////
 
 // Lookup a user in the database by email and returns their associated ID
-const lookupUserByEmail = (users, email) => {
+const lookupUserByEmail = (email) => {
   let user;
   for (let id in users) {
     if (users[id].email === email) {
@@ -248,17 +250,24 @@ const lookupUserByEmail = (users, email) => {
 const lookupShortURL = (urls, shortURL) => {
   let shortenedURL;
 
-  console.log('NOW IN THE lookupShortURL FUNCTION');
-  console.log('urls: ', urls);
-  console.log('shortURL provided: ', shortURL);
   for (let url in urls) {
-    console.log('URL key: ', url);
     if (url === shortURL) {
-      console.log("IF STATEMENT SUCCEEDED");
       shortenedURL = url;
     }
   }
   return shortenedURL;
+};
+
+// Filter out only the URLS from the database that are linked to the passed in user
+const urlsForUser = (id) => {
+  let filteredURLS = {};
+
+  for (let url in urlDatabase) {
+    if (urlDatabase[url].userID === id) {
+      filteredURLS[url] = urlDatabase[url];
+    }
+  }
+  return filteredURLS;
 };
 
 // Generate a 6 character long random alpha-numeric string
