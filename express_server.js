@@ -15,8 +15,14 @@ const PORT = 8080; // default port 8080
 
 // Database object of shorthand URL's
 const urlDatabase = {
-  'b2xVn2': 'http://www.lighthouselabs.ca',
-  '9sm5xK': 'http://www.google.com'
+  b2xVn2: {
+    longURL: 'http://www.lighthouselabs.ca',
+    userID: 'default_user'
+  },
+  i3BoGr: {
+    longURL: 'http://www.google.com',
+    userID: 'default_user'
+  }
 };
 
 // Database object of registered users containing one default user to start with
@@ -62,12 +68,11 @@ app.get('/urls', (req, res) => {
   if (!req.cookies['user_id']) {
     res.redirect('/login');
   } else {
-    console.log('urlDataBase:', urlDatabase);
+    console.log('urlDataBase:', urlDatabase);  // DEVELOPMENT ONLY. REMOVE FOR FINAL RELEASE.
     const templateVars = {
       urls: urlDatabase,
       'user': users[req.cookies['user_id']]
     };
-    console.log(urlDatabase);
     res.render('urls_index', templateVars);
   }
 });
@@ -91,7 +96,7 @@ app.get("/urls/:shortURL", (req, res) => {
   } else {
     const templateVars = {
       shortURL: req.params.shortURL,
-      longURL: urlDatabase[req.params.shortURL],
+      longURL: urlDatabase[req.params.shortURL].longURL,
       'user': users[req.cookies['user_id']]
     };
     res.render("urls_show", templateVars);
@@ -100,13 +105,22 @@ app.get("/urls/:shortURL", (req, res) => {
 
 // Redirect of a ShortURL to the actual webpage linked to it
 app.get("/u/:shortURL", (req, res) => {
-  const longURL = urlDatabase[req.params.shortURL];
-  res.redirect(longURL);
+  const shortURL = lookupShortURL(urlDatabase, req.params.shortURL);
+  console.log('BACK IN THE SHORTURL REDIRECT FUNCTION');
+  console.log(shortURL);
+
+  // Make sure a valid shortened URL was provided
+  if (!shortURL) {
+    res.status(400).send('Invalid shortened URL provided<br><a href="javascript:history.back()">Go Back</a>');
+  }
+  res.redirect(urlDatabase[shortURL].longURL);
 });
 
 // Register a new user
 app.get('/register', (req, res) => {
   const templateVars = {};
+
+  // Check to see if a cookie exists and assign the value to a variable to send to the EJS template
   if (!req.cookies['user_id']) {
     templateVars['user'] = null;
   } else {
@@ -124,6 +138,7 @@ app.get('/login', (req, res) => {
 
   console.log(users);
 
+  // Check to see if a cookie exists and redirect to the correct page
   if (req.cookies['user_id']) {
     templateVars['user'] = users[req.cookies['user_id']];
     res.render('urls_index', templateVars);
@@ -142,8 +157,10 @@ app.post('/urls/new', (req, res) => {
     res.status(400).send('Invalid URL entered<br><a href="javascript:history.back()">Go Back</a>');
   } else {
     const shortURL = generateRandomString(6);
-    urlDatabase[shortURL] = req.body.longURL;
-    res.redirect(`/urls/${shortURL}`);
+    urlDatabase[shortURL] = {
+      longURL: req.body.longURL
+    };
+    res.redirect(`/urls`);
   }
 });
 
@@ -152,7 +169,7 @@ app.post('/urls/:shortURL/edit', (req, res) => {
   if (!req.body.longURL) {
     res.status(400).send('Invalid URL entered<br><a href="javascript:history.back()">Go Back</a>');
   } else {
-    urlDatabase[req.params.shortURL] = req.body.longURL;
+    urlDatabase[req.params.shortURL].longURL = req.body.longURL;
     res.redirect(`/urls/${req.params.shortURL}`);
   }
 });
@@ -165,6 +182,7 @@ app.post('/urls/:shortURL/delete', (req, res) => {
 
 // Registering a new user
 app.post('/register', (req, res) => {
+  // Ensure an email and password has been entered
   if (!req.body.email || !req.body.password) {
     return res.status(400).send('Invalid email address or password<br><a href="javascript:history.back()">Go Back</a>');
   }
@@ -182,6 +200,7 @@ app.post('/register', (req, res) => {
     password: req.body.password
   };
 
+  console.log(urlDatabase);  // DEVELOPMENT ONLY. REMOVE FOR FINAL RELEASE.
   res.redirect('/login');
 });
 
@@ -191,7 +210,7 @@ app.post('/login', (req, res) => {
   const password = req.body.password;
 
   // Check to see if you user exists, if so, check if the passwords match
-  if (!user) {
+  if (user === undefined) {
     return res.status(403).send('User does not exist<br><a href="javascript:history.back()">Go Back</a>');
   } else if (user.password !== password) {
     return res.status(403).send('Password does not match<br><a href="javascript:history.back()">Go Back</a>');
@@ -204,6 +223,8 @@ app.post('/login', (req, res) => {
 
 // Logging out a user
 app.post('/logout', (req, res) => {
+  console.log(urlDatabase);  // DEVELOPMENT ONLY. REMOVE FOR FINAL RELEASE.
+  console.log(users);  // DEVELOPMENT ONLY. REMOVE FOR FINAL RELEASE.
   res.clearCookie('user_id');
   res.redirect('/login');
 });
@@ -214,14 +235,30 @@ app.post('/logout', (req, res) => {
 
 // Lookup a user in the database by email and returns their associated ID
 const lookupUserByEmail = (users, email) => {
+  let user;
   for (let id in users) {
-    const user = users[id];
-    if (user.email === email) {
-      return user;
-    } else {
-      return null;
+    if (users[id].email === email) {
+      user = users[id];
     }
   }
+  return user;
+};
+
+// Lookup a short URL in the database by the shortURL and returns that object if found
+const lookupShortURL = (urls, shortURL) => {
+  let shortenedURL;
+
+  console.log('NOW IN THE lookupShortURL FUNCTION');
+  console.log('urls: ', urls);
+  console.log('shortURL provided: ', shortURL);
+  for (let url in urls) {
+    console.log('URL key: ', url);
+    if (url === shortURL) {
+      console.log("IF STATEMENT SUCCEEDED");
+      shortenedURL = url;
+    }
+  }
+  return shortenedURL;
 };
 
 // Generate a 6 character long random alpha-numeric string
