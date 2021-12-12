@@ -10,7 +10,7 @@
         <li> <a class="nav-item nav-link" href="/urls">My URLs</a> </li>
        <li> <a class="nav-item nav-link" href="/urls/new">Create New URL</a> </li>
       </ul>   
-      <% if (!user) {%>   
+      <% if (!userID) {%>   
       <a href= '/login'> 
         <button type="submit" class="btn btn-primary mr-2">Login</button>   
         </a>
@@ -18,7 +18,7 @@
         <button type="submit" class="btn btn-primary">Register</button>   
         </a>
       <% } else { %> 
-        <h6> Logged in as <%= user.email %></h6> 
+        <h6> Logged in as <%= userID.email %></h6> 
       <form class="form-inline my-2 my-lg-0" method="POST" action="/logout">
         <button type="submit" class="btn btn-primary">Logout</button>    
         </form> 
