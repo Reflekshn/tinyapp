@@ -6,7 +6,13 @@ const app = express();
 const path = require('path');
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
+const bcrypt = require('bcryptjs');
 const PORT = 8080; // default port 8080
+
+
+
+// const password = "purple-monkey-dinosaur"; // found in the req.params object
+// const hashedPassword = bcrypt.hashSync(password, 10);
 
 
 /////////////////////////////////////////
@@ -30,7 +36,7 @@ const users = {
   'default_user': {
     id: 'default_user',
     email: 'default_user@example.com',
-    password: 'abcd'
+    password: bcrypt.hashSync('abcd', 10)
   }
 };
 
@@ -199,7 +205,7 @@ app.post('/register', (req, res) => {
   users[generatedID] = {
     id: generatedID,
     email: req.body.email,
-    password: req.body.password
+    password: bcrypt.hashSync(req.body.password, 10)
   };
 
   console.log(urlDatabase);
@@ -214,7 +220,7 @@ app.post('/login', (req, res) => {
   // Check to see if you user exists, if so, check if the passwords match
   if (user === undefined) {
     return res.status(403).send('User does not exist<br><a href="javascript:history.back()">Go Back</a>');
-  } else if (user.password !== password) {
+  } else if (!bcrypt.compareSync(password, user.password)) {
     return res.status(403).send('Password does not match<br><a href="javascript:history.back()">Go Back</a>');
   }
 
