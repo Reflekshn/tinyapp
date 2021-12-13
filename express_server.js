@@ -7,7 +7,9 @@ const path = require('path');
 const bodyParser = require('body-parser');
 const cookieSession = require('cookie-session');
 const bcrypt = require('bcryptjs');
+const { generateRandomString, lookupUserByEmail, urlsForUser, lookupShortURL } = require('./helpers');
 const PORT = 8080; // default port 8080
+
 
 
 
@@ -81,7 +83,7 @@ app.get('/urls', (req, res) => {
   console.log(urlDatabase);
   console.log(users);
   const templateVars = {
-    urls: urlsForUser(req.session.user_id),
+    urls: urlsForUser(req.session.user_id, urlDatabase),
     userID: users[req.session.user_id]
   };
   res.render('urls_index', templateVars);
@@ -200,7 +202,7 @@ app.post('/register', (req, res) => {
   }
 
   // Check to see if user exists
-  const user = lookupUserByEmail(req.body.email);
+  const user = lookupUserByEmail(req.body.email, users);
   if (user) {
     return res.status(400).send('Username/Email already taken<br><a href="javascript:history.back()">Go Back</a>');
   }
@@ -218,7 +220,7 @@ app.post('/register', (req, res) => {
 
 // Logging in a user
 app.post('/login', (req, res) => {
-  const user = lookupUserByEmail(req.body.email);
+  const user = lookupUserByEmail(req.body.email, users);
   const password = req.body.password;
 
   // Check to see if you user exists, if so, check if the passwords match
@@ -229,6 +231,7 @@ app.post('/login', (req, res) => {
   }
 
   // Everything checks out, set a cookie and take them to their homepage
+  // eslint-disable-next-line camelcase
   req.session.user_id = user.id;
   res.redirect('/urls');
 });
@@ -240,45 +243,3 @@ app.post('/logout', (req, res) => {
   req.session = null;
   res.redirect('/login');
 });
-
-/////////////////////////////////////////
-// Helper Functions
-/////////////////////////////////////////
-
-// Lookup a user in the database by email and returns their associated ID
-const lookupUserByEmail = (email) => {
-  let user;
-  for (let id in users) {
-    if (users[id].email === email) {
-      user = users[id];
-    }
-  }
-  return user;
-};
-
-// Lookup a short URL in the database by the shortURL and returns that object if found
-const lookupShortURL = (urls, shortURL) => {
-  let shortenedURL;
-
-  for (let url in urls) {
-    if (url === shortURL) {
-      shortenedURL = url;
-    }
-  }
-  return shortenedURL;
-};
-
-// Filter out only the URLS from the database that are linked to the passed in user
-const urlsForUser = (id) => {
-  let filteredURLS = {};
-
-  for (let url in urlDatabase) {
-    if (urlDatabase[url].userID === id) {
-      filteredURLS[url] = urlDatabase[url];
-    }
-  }
-  return filteredURLS;
-};
-
-// Generate a 6 character long random alpha-numeric string
-const generateRandomString = (length) => Math.random().toString(36).slice(2, length + 2);
