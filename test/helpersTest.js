@@ -18,9 +18,7 @@ const testUsers = {
 describe('lookupUserByEmail', function() {
   it('should return a user with valid email', function() {
     const user = lookupUserByEmail("user@example.com", testUsers);
-    const expectedUserID = "userRandomID";
     // Write your assert statement here
-    // assert.equal(user.id, expectedUserID);
     assert(user);
   });
 
