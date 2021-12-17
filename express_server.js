@@ -11,12 +11,6 @@ const { generateRandomString, lookupUserByEmail, urlsForUser, lookupShortURL } =
 const PORT = 8080; // default port 8080
 
 
-
-
-// const password = "purple-monkey-dinosaur"; // found in the req.params object
-// const hashedPassword = bcrypt.hashSync(password, 10);
-
-
 /////////////////////////////////////////
 // Setup procedures
 /////////////////////////////////////////
@@ -61,11 +55,6 @@ app.use(cookieSession({
 })
 );
 
-// Setup the server to listen on the desired PORT
-app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}!`);
-});
-
 /////////////////////////////////////////
 // GET route handlers
 /////////////////////////////////////////
@@ -83,7 +72,7 @@ app.get('/urls', (req, res) => {
     res.status(400).send('Please login or register a new user<br><a href="javascript:history.back()">Go Back</a>');
   }
   const templateVars = {
-    urls: urlsForUser(req.session.user_id, urlDatabase),
+    urls: urlsForUser(userID, urlDatabase),
     userID: users[userID]
   };
   res.render('urls_index', templateVars);
@@ -108,8 +97,13 @@ app.get("/urls/:shortURL", (req, res) => {
   const userID = req.session.user_id;
   const shortURL = req.params.shortURL;
 
+  // Ensure user is logged in, and that the provided short URL exists for that user
   if (!userID) {
-    res.redirect('/login');
+    res.status(400).send('Please login or register a new user<br><a href="javascript:history.back()">Go Back</a>');
+  } else if (!urlDatabase[shortURL]) {
+    res.status(400).send('The provided URL does not exist for this user<br><a href="javascript:history.back()">Go Back</a>');
+  } else if (urlDatabase[shortURL].userID !== userID) {
+    res.status(400).send('The provided URL does not belong to this user<br><a href="javascript:history.back()">Go Back</a>');
   } else {
     const templateVars = {
       shortURL: shortURL,
@@ -172,7 +166,9 @@ app.post('/urls/new', (req, res) => {
   const longURL = req.body.longURL;
   const userID = req.session.user_id;
 
-  if (!longURL) {
+  if (!userID) {
+    res.status(400).send('Please login or register a new user<br><a href="javascript:history.back()">Go Back</a>');
+  } else if (!longURL) {
     res.status(400).send('Invalid URL entered<br><a href="javascript:history.back()">Go Back</a>');
   } else {
     const shortURL = generateRandomString(6);
@@ -190,13 +186,19 @@ app.post('/urls/:shortURL/edit', (req, res) => {
   const longURL = req.body.longURL;
   const userID = req.session.user_id;
 
-  if (urlDatabase[shortURL].userID === userID) {
+  if (!userID) {
+    res.status(400).send('Please login or register a new user<br><a href="javascript:history.back()">Go Back</a>');
+  } else if (!urlDatabase[shortURL]) {
+    res.status(400).send('The provided URL does not exist for this user<br><a href="javascript:history.back()">Go Back</a>');
+  } else if (urlDatabase[shortURL].userID !== userID) {
+    res.status(400).send('The provided URL does not belong to this user<br><a href="javascript:history.back()">Go Back</a>');
+  } else if (urlDatabase[shortURL].userID === userID) {
     if (!longURL) {
       res.status(400).send('Invalid URL entered<br><a href="javascript:history.back()">Go Back</a>');
     }
     urlDatabase[shortURL].longURL = longURL;
   }
-  res.redirect(`/urls/${req.params.shortURL}`);
+  res.redirect('/urls');
 });
 
 // Deleting a short URL from the database
@@ -233,7 +235,9 @@ app.post('/register', (req, res) => {
     password: bcrypt.hashSync(password, 10)
   };
 
-  res.redirect('/login');
+  // Log in and create the cookie for the newly registered user
+  req.session.user_id = user.id;
+  res.redirect('/urls');
 });
 
 // Logging in a user
@@ -258,4 +262,9 @@ app.post('/login', (req, res) => {
 app.post('/logout', (req, res) => {
   req.session = null;
   res.redirect('/login');
+});
+
+// Setup the server to listen on the desired PORT
+app.listen(PORT, () => {
+  console.log(`Example app listening on port ${PORT}!`);
 });
