@@ -236,7 +236,8 @@ app.post('/register', (req, res) => {
   };
 
   // Log in and create the cookie for the newly registered user
-  req.session.user_id = user.id;
+  // eslint-disable-next-line camelcase
+  req.session.user_id = users[generatedID].id;
   res.redirect('/urls');
 });
 
