@@ -61,7 +61,7 @@ app.use(cookieSession({
 
 // Root - redirects to the login page
 app.get('/', (req, res) => {
-  res.redirect('/login');
+  return res.redirect('/login');
 });
 
 // Url index of all stored urls
@@ -69,13 +69,13 @@ app.get('/urls', (req, res) => {
   const userID = req.session.user_id;
 
   if (!userID) {
-    res.status(400).send('Please login or register a new user<br><a href="javascript:history.back()">Go Back</a>');
+    return res.status(400).send('Please login or register a new user<br><a href="javascript:history.back()">Go Back</a>');
   }
   const templateVars = {
     urls: urlsForUser(userID, urlDatabase),
     userID: users[userID]
   };
-  res.render('urls_index', templateVars);
+  return res.render('urls_index', templateVars);
 });
 
 // Adding a new URL
@@ -83,12 +83,12 @@ app.get("/urls/new", (req, res) => {
   const userID = req.session.user_id;
 
   if (!userID) {
-    res.redirect('/login');
+    return res.redirect('/login');
   } else {
     const templateVars = {
       userID: users[userID]
     };
-    res.render('urls_new', templateVars);
+    return res.render('urls_new', templateVars);
   }
 });
 
@@ -99,18 +99,18 @@ app.get("/urls/:shortURL", (req, res) => {
 
   // Ensure user is logged in, and that the provided short URL exists for that user
   if (!userID) {
-    res.status(400).send('Please login or register a new user<br><a href="javascript:history.back()">Go Back</a>');
+    return res.status(400).send('Please login or register a new user<br><a href="javascript:history.back()">Go Back</a>');
   } else if (!urlDatabase[shortURL]) {
-    res.status(400).send('The provided URL does not exist for this user<br><a href="javascript:history.back()">Go Back</a>');
+    return res.status(400).send('The provided URL does not exist for this user<br><a href="javascript:history.back()">Go Back</a>');
   } else if (urlDatabase[shortURL].userID !== userID) {
-    res.status(400).send('The provided URL does not belong to this user<br><a href="javascript:history.back()">Go Back</a>');
+    return res.status(400).send('The provided URL does not belong to this user<br><a href="javascript:history.back()">Go Back</a>');
   } else {
     const templateVars = {
       shortURL: shortURL,
       longURL: urlDatabase[shortURL].longURL,
       userID: users[userID]
     };
-    res.render("urls_show", templateVars);
+    return res.render("urls_show", templateVars);
   }
 });
 
@@ -120,9 +120,9 @@ app.get("/u/:shortURL", (req, res) => {
 
   // Make sure a valid shortened URL was provided
   if (!shortURL) {
-    res.status(400).send('Invalid shortened URL provided<br><a href="javascript:history.back()">Go Back</a>');
+    return res.status(400).send('Invalid shortened URL provided<br><a href="javascript:history.back()">Go Back</a>');
   }
-  res.redirect(urlDatabase[shortURL].longURL);
+  return res.redirect(urlDatabase[shortURL].longURL);
 });
 
 // Register a new user
@@ -136,7 +136,7 @@ app.get('/register', (req, res) => {
   } else {
     templateVars['userID'] = users[userID];
   }
-  res.render('register', templateVars);
+  return res.render('register', templateVars);
 });
 
 // Login page
@@ -151,9 +151,9 @@ app.get('/login', (req, res) => {
   // Check to see if a cookie exists and redirect to the correct page
   if (userID) {
     templateVars['userID'] = users[userID];
-    res.render('urls_index', templateVars);
+    return res.render('urls_index', templateVars);
   } else {
-    res.render('login', templateVars);
+    return res.render('login', templateVars);
   }
 });
 
@@ -167,16 +167,16 @@ app.post('/urls/new', (req, res) => {
   const userID = req.session.user_id;
 
   if (!userID) {
-    res.status(400).send('Please login or register a new user<br><a href="javascript:history.back()">Go Back</a>');
+    return res.status(400).send('Please login or register a new user<br><a href="javascript:history.back()">Go Back</a>');
   } else if (!longURL) {
-    res.status(400).send('Invalid URL entered<br><a href="javascript:history.back()">Go Back</a>');
+    return res.status(400).send('Invalid URL entered<br><a href="javascript:history.back()">Go Back</a>');
   } else {
     const shortURL = generateRandomString(6);
     urlDatabase[shortURL] = {
       longURL: longURL,
       userID: userID
     };
-    res.redirect(`/urls`);
+    return res.redirect(`/urls`);
   }
 });
 
@@ -187,18 +187,18 @@ app.post('/urls/:shortURL', (req, res) => {
   const userID = req.session.user_id;
 
   if (!userID) {
-    res.status(400).send('Please login or register a new user<br><a href="javascript:history.back()">Go Back</a>');
+    return res.status(400).send('Please login or register a new user<br><a href="javascript:history.back()">Go Back</a>');
   } else if (!urlDatabase[shortURL]) {
-    res.status(400).send('The provided URL does not exist for this user<br><a href="javascript:history.back()">Go Back</a>');
+    return res.status(400).send('The provided URL does not exist for this user<br><a href="javascript:history.back()">Go Back</a>');
   } else if (urlDatabase[shortURL].userID !== userID) {
-    res.status(400).send('The provided URL does not belong to this user<br><a href="javascript:history.back()">Go Back</a>');
+    return res.status(400).send('The provided URL does not belong to this user<br><a href="javascript:history.back()">Go Back</a>');
   } else if (urlDatabase[shortURL].userID === userID) {
     if (!longURL) {
-      res.status(400).send('Invalid URL entered<br><a href="javascript:history.back()">Go Back</a>');
+      return res.status(400).send('Invalid URL entered<br><a href="javascript:history.back()">Go Back</a>');
     }
     urlDatabase[shortURL].longURL = longURL;
   }
-  res.redirect('/urls');
+  return res.redirect('/urls');
 });
 
 // Deleting a short URL from the database
@@ -209,7 +209,7 @@ app.post('/urls/:shortURL/delete', (req, res) => {
   if (urlDatabase[shortURL].userID === userID) {
     delete urlDatabase[shortURL];
   }
-  res.redirect('/urls');
+  return res.redirect('/urls');
 });
 
 // Registering a new user
@@ -238,7 +238,7 @@ app.post('/register', (req, res) => {
   // Log in and create the cookie for the newly registered user
   // eslint-disable-next-line camelcase
   req.session.user_id = users[generatedID].id;
-  res.redirect('/urls');
+  return res.redirect('/urls');
 });
 
 // Logging in a user
@@ -256,13 +256,13 @@ app.post('/login', (req, res) => {
   // Everything checks out, set a cookie and take them to their homepage
   // eslint-disable-next-line camelcase
   req.session.user_id = user.id;
-  res.redirect('/urls');
+  return res.redirect('/urls');
 });
 
 // Logging out a user
 app.post('/logout', (req, res) => {
   req.session = null;
-  res.redirect('/login');
+  return res.redirect('/login');
 });
 
 // Setup the server to listen on the desired PORT
