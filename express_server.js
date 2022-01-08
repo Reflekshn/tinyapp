@@ -181,7 +181,7 @@ app.post('/urls/new', (req, res) => {
 });
 
 // Editing a short URL in the database
-app.post('/urls/:shortURL/edit', (req, res) => {
+app.post('/urls/:shortURL', (req, res) => {
   const shortURL = req.params.shortURL;
   const longURL = req.body.longURL;
   const userID = req.session.user_id;
