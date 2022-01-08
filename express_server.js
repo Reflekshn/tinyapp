@@ -206,10 +206,12 @@ app.post('/urls/:shortURL/delete', (req, res) => {
   const shortURL = req.params.shortURL;
   const userID = req.session.user_id;
 
-  if (urlDatabase[shortURL].userID === userID) {
+  if (!userID) {
+    return res.status(400).send('Please login or register a new user<br><a href="javascript:history.back()">Go Back</a>');
+  } else if (urlDatabase[shortURL].userID === userID) {
     delete urlDatabase[shortURL];
+    return res.redirect('/urls');
   }
-  return res.redirect('/urls');
 });
 
 // Registering a new user
