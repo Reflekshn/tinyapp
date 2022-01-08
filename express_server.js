@@ -17,23 +17,10 @@ const PORT = 8080; // default port 8080
 
 // Database object of shorthand URL's
 const urlDatabase = {
-  b2xVn2: {
-    longURL: 'http://www.lighthouselabs.ca',
-    userID: 'default_user'
-  },
-  i3BoGr: {
-    longURL: 'http://www.google.com',
-    userID: 'default_user'
-  }
 };
 
 // Database object of registered users containing one default user to start with
 const users = {
-  'default_user': {
-    id: 'default_user',
-    email: 'default_user@example.com',
-    password: bcrypt.hashSync('abcd', 10)
-  }
 };
 
 
