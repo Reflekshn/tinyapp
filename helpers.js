@@ -5,7 +5,7 @@
 // Lookup a user in the database by email and returns their associated ID
 const lookupUserByEmail = (email, userDatabase) => {
   let user;
-  for (let id in userDatabase) {
+  for (const id in userDatabase) {
     if (userDatabase[id].email === email) {
       user = userDatabase[id];
     }
@@ -17,7 +17,7 @@ const lookupUserByEmail = (email, userDatabase) => {
 const lookupShortURL = (urls, shortURL) => {
   let shortenedURL;
 
-  for (let url in urls) {
+  for (const url in urls) {
     if (url === shortURL) {
       shortenedURL = url;
     }
@@ -29,7 +29,7 @@ const lookupShortURL = (urls, shortURL) => {
 const urlsForUser = (id, urlDatabase) => {
   let filteredURLS = {};
 
-  for (let url in urlDatabase) {
+  for (const url in urlDatabase) {
     if (urlDatabase[url].userID === id) {
       filteredURLS[url] = urlDatabase[url];
     }
